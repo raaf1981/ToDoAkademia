@@ -1,6 +1,9 @@
 package com.company.todolistproject;
 
 import android.content.Context;
+import android.widget.Toast;
+
+import com.google.android.material.snackbar.Snackbar;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -37,6 +40,7 @@ public class FileHelper {
             itemlist = (ArrayList<String>) ois.readObject();
         } catch (FileNotFoundException e) {
             itemlist = new ArrayList<>();
+            Toast.makeText(context,R.string.file_not_found_toast_message, Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -44,4 +48,5 @@ public class FileHelper {
 
         return itemlist;
     }
+
 }

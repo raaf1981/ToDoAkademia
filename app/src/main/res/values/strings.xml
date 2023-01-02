@@ -6,4 +6,5 @@
     <string name="button_text_negative">No</string>
     <string name="edit_text_new_item_hint">Add new item</string>
     <string name="button_add_text">Add</string>
+    <string name="file_not_found_toast_message">File not found</string>
 </resources>
