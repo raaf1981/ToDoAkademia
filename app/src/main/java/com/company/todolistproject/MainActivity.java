@@ -1,9 +1,6 @@
 package com.company.todolistproject;
 
-import android.content.DialogInterface;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -11,6 +8,7 @@ import android.widget.ListView;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.FragmentActivity;
+
 import java.util.ArrayList;
 
 public class MainActivity extends FragmentActivity {
@@ -32,44 +30,36 @@ public class MainActivity extends FragmentActivity {
 
         itemlist = FileHelper.readData(this);
 
-        arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, android.R.id.text1, itemlist);
+        arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, android.R.id.text1, itemlist);
         listView.setAdapter(arrayAdapter);
+        setAddButtonOnClickListener();
+        setOnListViewItemOnClickListener();
+    }
 
-        add.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String itemName = item.getText().toString();
-                itemlist.add(itemName);
-                item.setText("");
-                FileHelper.writeData(itemlist, getApplicationContext());
+    private void setOnListViewItemOnClickListener() {
+        listView.setOnItemClickListener((parent, view, position, id) -> {
+            AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+            alert.setTitle(R.string.list_alert_title);
+            alert.setMessage(R.string.list_alert_message);
+            alert.setCancelable(false);
+            alert.setNegativeButton(R.string.button_text_negative, (dialog, which) -> dialog.cancel());
+            alert.setPositiveButton(R.string.button_text_positive, (dialog, which) -> {
+                itemlist.remove(position);
                 arrayAdapter.notifyDataSetChanged();
-            }
+                FileHelper.writeData(itemlist, getApplicationContext());
+            });
+            AlertDialog alertDialog = alert.create();
+            alertDialog.show();
         });
+    }
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
-                AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
-                alert.setTitle("Delete");
-                alert.setMessage("Do you want to delete this item from list?");
-                alert.setCancelable(false);
-                alert.setNegativeButton("No", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                });
-                alert.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        itemlist.remove(position);
-                        arrayAdapter.notifyDataSetChanged();
-                        FileHelper.writeData(itemlist, getApplicationContext());
-                    }
-                });
-                AlertDialog alertDialog = alert.create();
-                alertDialog.show();
-            }
+    private void setAddButtonOnClickListener() {
+        add.setOnClickListener(v -> {
+            String itemName = item.getText().toString();
+            itemlist.add(itemName);
+            item.setText("");
+            FileHelper.writeData(itemlist, getApplicationContext());
+            arrayAdapter.notifyDataSetChanged();
         });
     }
 }
