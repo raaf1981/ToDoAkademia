@@ -1,10 +1,12 @@
 package com.company.todolistproject;
 
 import static com.company.todolistproject.AppConstants.CD_TAG;
+import static com.company.todolistproject.AppConstants.ITEMLIST;
 import static com.company.todolistproject.AppConstants.WEB_URL_1;
 import static com.company.todolistproject.AppConstants.WEB_URL_2;
 import static com.company.todolistproject.AppConstants.WEB_URL_3;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
@@ -53,7 +55,9 @@ public class MainActivity extends FragmentActivity implements ItemListOnClickLis
             String itemName = item.getText().toString();
             itemlist.add(itemName);
             item.setText("");
-            FileHelper.writeData(itemlist, getApplicationContext());
+            Intent i = new Intent(getApplicationContext(), FileHelperService.class);
+            i.putStringArrayListExtra(ITEMLIST,itemlist);
+            startService(i);
             adapter.notifyDataSetChanged();
         });
     }
