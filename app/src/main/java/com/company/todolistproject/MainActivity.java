@@ -3,23 +3,23 @@ package com.company.todolistproject;
 import static com.company.todolistproject.AppConstants.CD_TAG;
 
 import android.os.Bundle;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ListView;
 
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 
-public class MainActivity extends FragmentActivity {
+public class MainActivity extends FragmentActivity implements ItemListOnClickListener{
 
-    EditText item;
-    Button add;
-    ListView listView;
-    ArrayList<String> itemlist = new ArrayList<>();
-    ArrayAdapter<String> arrayAdapter;
+    private EditText item;
+    private Button add;
+    private ArrayList<String> itemlist = new ArrayList<>();
+    private RecyclerView recyclerView;
+    private RecyclerAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,22 +28,19 @@ public class MainActivity extends FragmentActivity {
 
         item = findViewById(R.id.editText);
         add = findViewById(R.id.button);
-        listView = findViewById(R.id.list);
+        recyclerView = findViewById(R.id.recyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
 
         itemlist = FileHelper.readData(this);
 
-        arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, android.R.id.text1, itemlist);
-        listView.setAdapter(arrayAdapter);
+        adapter = new RecyclerAdapter(itemlist,MainActivity.this);
+        recyclerView.setAdapter(adapter);
         setAddButtonOnClickListener();
-        setOnListViewItemOnClickListener();
     }
 
-    private void setOnListViewItemOnClickListener() {
-        listView.setOnItemClickListener((parent, view, position, id) -> {
+    public void showConfirmDeletionDialogFragment(int position) {
             DialogFragment newFragment = DeleteConfirmDialogFragment.newInstance(position);
             newFragment.show(getSupportFragmentManager(), CD_TAG);
-
-        });
     }
 
     private void setAddButtonOnClickListener() {
@@ -52,13 +49,19 @@ public class MainActivity extends FragmentActivity {
             itemlist.add(itemName);
             item.setText("");
             FileHelper.writeData(itemlist, getApplicationContext());
-            arrayAdapter.notifyDataSetChanged();
+            adapter.notifyDataSetChanged();
         });
+    }
+
+
+    @Override
+    public void onItemClick(int position) {
+        showConfirmDeletionDialogFragment(position);
     }
 
     public void onDeleteConfirmDialogClick(int position) {
         itemlist.remove(position);
-        arrayAdapter.notifyDataSetChanged();
+        adapter.notifyDataSetChanged();
         FileHelper.writeData(itemlist, getApplicationContext());
     }
 }
