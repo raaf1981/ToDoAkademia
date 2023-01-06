@@ -1,6 +1,9 @@
 package com.company.todolistproject;
 
 import static com.company.todolistproject.AppConstants.CD_TAG;
+import static com.company.todolistproject.AppConstants.WEB_URL_1;
+import static com.company.todolistproject.AppConstants.WEB_URL_2;
+import static com.company.todolistproject.AppConstants.WEB_URL_3;
 
 import android.os.Bundle;
 import android.widget.Button;
@@ -20,6 +23,7 @@ public class MainActivity extends FragmentActivity implements ItemListOnClickLis
     private ArrayList<String> itemlist = new ArrayList<>();
     private RecyclerView recyclerView;
     private RecyclerAdapter adapter;
+    private ArrayList<String> webList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,12 +32,13 @@ public class MainActivity extends FragmentActivity implements ItemListOnClickLis
 
         item = findViewById(R.id.editText);
         add = findViewById(R.id.button);
+        webListInit();
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
 
         itemlist = FileHelper.readData(this);
 
-        adapter = new RecyclerAdapter(itemlist,MainActivity.this);
+        adapter = new RecyclerAdapter(itemlist, webList, MainActivity.this);
         recyclerView.setAdapter(adapter);
         setAddButtonOnClickListener();
     }
@@ -53,7 +58,6 @@ public class MainActivity extends FragmentActivity implements ItemListOnClickLis
         });
     }
 
-
     @Override
     public void onItemClick(int position) {
         showConfirmDeletionDialogFragment(position);
@@ -63,5 +67,12 @@ public class MainActivity extends FragmentActivity implements ItemListOnClickLis
         itemlist.remove(position);
         adapter.notifyDataSetChanged();
         FileHelper.writeData(itemlist, getApplicationContext());
+    }
+
+    private void webListInit(){
+        webList.clear();
+        webList.add(WEB_URL_1);
+        webList.add(WEB_URL_2);
+        webList.add(WEB_URL_3);
     }
 }
