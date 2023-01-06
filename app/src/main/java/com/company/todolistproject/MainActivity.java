@@ -1,12 +1,14 @@
 package com.company.todolistproject;
 
+import static com.company.todolistproject.AppConstants.CD_TAG;
+
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 
-import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentActivity;
 
 import java.util.ArrayList;
@@ -38,18 +40,9 @@ public class MainActivity extends FragmentActivity {
 
     private void setOnListViewItemOnClickListener() {
         listView.setOnItemClickListener((parent, view, position, id) -> {
-            AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
-            alert.setTitle(R.string.list_alert_title);
-            alert.setMessage(R.string.list_alert_message);
-            alert.setCancelable(false);
-            alert.setNegativeButton(R.string.button_text_negative, (dialog, which) -> dialog.cancel());
-            alert.setPositiveButton(R.string.button_text_positive, (dialog, which) -> {
-                itemlist.remove(position);
-                arrayAdapter.notifyDataSetChanged();
-                FileHelper.writeData(itemlist, getApplicationContext());
-            });
-            AlertDialog alertDialog = alert.create();
-            alertDialog.show();
+            DialogFragment newFragment = DeleteConfirmDialogFragment.newInstance(position);
+            newFragment.show(getSupportFragmentManager(), CD_TAG);
+
         });
     }
 
@@ -61,5 +54,11 @@ public class MainActivity extends FragmentActivity {
             FileHelper.writeData(itemlist, getApplicationContext());
             arrayAdapter.notifyDataSetChanged();
         });
+    }
+
+    public void onDeleteConfirmDialogClick(int position) {
+        itemlist.remove(position);
+        arrayAdapter.notifyDataSetChanged();
+        FileHelper.writeData(itemlist, getApplicationContext());
     }
 }

@@ -1,9 +1,9 @@
 package com.company.todolistproject;
 
+import static com.company.todolistproject.AppConstants.FILENAME;
+
 import android.content.Context;
 import android.widget.Toast;
-
-import com.google.android.material.snackbar.Snackbar;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -14,8 +14,6 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
 public class FileHelper {
-
-    public static final String FILENAME = "listinfoa.dat";
 
     public static void writeData(ArrayList<String> item, Context context)
     {
