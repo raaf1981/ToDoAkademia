@@ -2,11 +2,14 @@ package com.company.todolistproject;
 
 import static com.company.todolistproject.AppConstants.CD_TAG;
 import static com.company.todolistproject.AppConstants.ITEMLIST;
+import static com.company.todolistproject.AppConstants.ITEMSET;
 import static com.company.todolistproject.AppConstants.WEB_URL_1;
 import static com.company.todolistproject.AppConstants.WEB_URL_2;
 import static com.company.todolistproject.AppConstants.WEB_URL_3;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
@@ -17,15 +20,17 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class MainActivity extends FragmentActivity implements ItemListOnClickListener{
 
     private EditText item;
     private Button add;
-    private ArrayList<String> itemlist = new ArrayList<>();
+    private ArrayList<String> itemList = new ArrayList<>();
     private RecyclerView recyclerView;
     private RecyclerAdapter adapter;
     private ArrayList<String> webList = new ArrayList<>();
+    private SharedPreferences sharedPrferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,9 +43,10 @@ public class MainActivity extends FragmentActivity implements ItemListOnClickLis
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
 
-        itemlist = FileHelper.readData(this);
+        sharedPrferences = getSharedPreferences(ITEMSET, Context.MODE_PRIVATE);
+        itemList = new ArrayList<>(sharedPrferences.getStringSet(ITEMSET, Collections.emptySet()));
 
-        adapter = new RecyclerAdapter(itemlist, webList, MainActivity.this);
+        adapter = new RecyclerAdapter(itemList, webList, MainActivity.this);
         recyclerView.setAdapter(adapter);
         setAddButtonOnClickListener();
     }
@@ -53,11 +59,9 @@ public class MainActivity extends FragmentActivity implements ItemListOnClickLis
     private void setAddButtonOnClickListener() {
         add.setOnClickListener(v -> {
             String itemName = item.getText().toString();
-            itemlist.add(itemName);
+            itemList.add(itemName);
             item.setText("");
-            Intent i = new Intent(getApplicationContext(), FileHelperService.class);
-            i.putStringArrayListExtra(ITEMLIST,itemlist);
-            startService(i);
+            saveDataServiceCall(itemList);
             adapter.notifyDataSetChanged();
         });
     }
@@ -68,9 +72,9 @@ public class MainActivity extends FragmentActivity implements ItemListOnClickLis
     }
 
     public void onDeleteConfirmDialogClick(int position) {
-        itemlist.remove(position);
+        itemList.remove(position);
         adapter.notifyDataSetChanged();
-        FileHelper.writeData(itemlist, getApplicationContext());
+        saveDataServiceCall(itemList);
     }
 
     private void webListInit(){
@@ -78,5 +82,11 @@ public class MainActivity extends FragmentActivity implements ItemListOnClickLis
         webList.add(WEB_URL_1);
         webList.add(WEB_URL_2);
         webList.add(WEB_URL_3);
+    }
+
+    private void saveDataServiceCall(ArrayList<String> itemListIn){
+        Intent i = new Intent(getApplicationContext(), FileHelperService.class);
+        i.putStringArrayListExtra(ITEMLIST,itemListIn);
+        startService(i);
     }
 }
