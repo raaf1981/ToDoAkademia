@@ -1,7 +1,5 @@
 package com.company.todolistproject;
 
-import java.util.Date;
-
 /**
  * Created by Rafal Zaborowski on 07.01.2023.
  */

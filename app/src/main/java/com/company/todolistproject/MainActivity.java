@@ -1,7 +1,10 @@
 package com.company.todolistproject;
 
+import static com.company.todolistproject.AppConstants.AZSORT;
 import static com.company.todolistproject.AppConstants.CD_TAG;
+import static com.company.todolistproject.AppConstants.DATESORT;
 import static com.company.todolistproject.AppConstants.ITEMLIST;
+import static com.company.todolistproject.AppConstants.SAVEDDATA;
 import static com.company.todolistproject.AppConstants.WEB_URL_1;
 import static com.company.todolistproject.AppConstants.WEB_URL_2;
 import static com.company.todolistproject.AppConstants.WEB_URL_3;
@@ -22,22 +25,27 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class MainActivity extends FragmentActivity implements ItemListOnClickListener{
 
     private EditText item;
     private Button add;
+    private Button showDeleted;
+    private Button aZSort;
+    private Button dateSort;
     private ArrayList<ToDoItem> itemList = new ArrayList<>();
     private ArrayList<ToDoItem> itemListFiltered = new ArrayList<>();
     private RecyclerView recyclerView;
     private RecyclerAdapter adapter;
     private ArrayList<String> webList = new ArrayList<>();
     private SharedPreferences sharedPrferences;
+    private boolean isListFiltered = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,23 +54,30 @@ public class MainActivity extends FragmentActivity implements ItemListOnClickLis
 
         item = findViewById(R.id.editText);
         add = findViewById(R.id.button);
+        showDeleted = findViewById(R.id.ShowDeletedButton);
+        aZSort = findViewById(R.id.AZSortButton);
+        dateSort = findViewById(R.id.DataSortButton);
         webListInit();
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
         itemList = readFromSharedPrefs();
-        refreshFilteredList();
-        adapter = new RecyclerAdapter(itemListFiltered, webList, MainActivity.this);
+        refreshList();
+        adapter = new RecyclerAdapter(itemList, webList, MainActivity.this);
         recyclerView.setAdapter(adapter);
         setAddButtonOnClickListener();
+        setShowDeletedButtonOnClickListener();
+        setAZSortButtonOnClickListener();
+        setDateSortButtonOnClickListener();
     }
 
-    private void refreshFilteredList() {
-        itemListFiltered.clear();
-        itemListFiltered.addAll(itemList.stream().filter(s -> !s.isDeleted).collect(Collectors.toCollection(ArrayList::new)));
+    private void refreshList() {
+        ArrayList<ToDoItem> itemListTemp = new ArrayList<>(itemList);
+        itemList.clear();
+        itemList.addAll(itemListTemp);
     }
 
     private ArrayList<ToDoItem> readFromSharedPrefs() {
-        sharedPrferences = getSharedPreferences(ITEMLIST, Context.MODE_PRIVATE);
+        sharedPrferences = getSharedPreferences(SAVEDDATA, Context.MODE_PRIVATE);
         String jsonString = sharedPrferences.getString(ITEMLIST, "");
         if(getObjListFromJson(jsonString) == null) {
             return new ArrayList<>();
@@ -83,12 +98,58 @@ public class MainActivity extends FragmentActivity implements ItemListOnClickLis
     private void setAddButtonOnClickListener() {
         add.setOnClickListener(v -> {
             String itemText = item.getText().toString();
+
             itemList.add(createNewItemToAdd(itemText));
             item.setText("");
             saveDataServiceCall(itemList);
-            refreshFilteredList();
+            refreshList();
             adapter.notifyDataSetChanged();
         });
+    }
+
+    private void setShowDeletedButtonOnClickListener() {
+        showDeleted.setOnClickListener(v -> {
+            if(isListFiltered){
+                showDeleted.setText(R.string.button_text_show_deleted_hide);
+            }else{
+                showDeleted.setText(R.string.button_text_show_deleted_show);
+            }
+            isListFiltered = !isListFiltered;
+            adapter.setListFiltered(isListFiltered);
+            refreshList();
+            adapter.notifyDataSetChanged();
+        });
+    }
+
+    private void setAZSortButtonOnClickListener() {
+        aZSort.setOnClickListener(v -> {
+            sortItemList(AZSORT);
+            refreshList();
+            adapter.notifyDataSetChanged();
+        });
+    }
+
+    private void setDateSortButtonOnClickListener() {
+        dateSort.setOnClickListener(v -> {
+            sortItemList(DATESORT);
+            refreshList();
+            adapter.notifyDataSetChanged();
+        });
+    }
+
+    private void sortItemList(int sortBy){
+        if(sortBy==AZSORT){
+            itemList.sort(Comparator.comparing(v -> v.text));
+        }else if(sortBy==DATESORT){
+            itemList.sort(Comparator.comparing(v -> {
+                try {
+                    return getDateFromFormattedString(v.data);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            }));
+        }
     }
 
     private ToDoItem createNewItemToAdd(String itemText) {
@@ -98,23 +159,36 @@ public class MainActivity extends FragmentActivity implements ItemListOnClickLis
 
     private int foundLastId() {
         int tempId = 0;
-        for (ToDoItem tdi:itemList) {
-            if (tdi.id >tempId){
-                tempId = tdi.id;
+        if(itemList.size()>0) {
+            for (ToDoItem tdi : itemList) {
+                if (tdi.id > tempId) {
+                    tempId = tdi.id;
+                }
             }
         }
         return tempId;
     }
 
     @Override
-    public void onItemClick(int position) {
-        showConfirmDeletionDialogFragment(position);
+    public void onItemClick(int position, boolean isDeleted) {
+        if(isDeleted){
+            revertDeletedItem(position);
+        }else {
+            showConfirmDeletionDialogFragment(position);
+        }
+    }
+
+    private void revertDeletedItem(int position) {
+        markItemAsUndeleted(position);
+        saveDataServiceCall(itemList);
+        refreshList();
+        adapter.notifyDataSetChanged();
     }
 
     public void onDeleteConfirmDialogClick(int itemId) {
         markItemAsDeleted(itemId);
         saveDataServiceCall(itemList);
-        refreshFilteredList();
+        refreshList();
         adapter.notifyDataSetChanged();
     }
 
@@ -123,6 +197,17 @@ public class MainActivity extends FragmentActivity implements ItemListOnClickLis
             if(tdi.id == itemId){
                 int index = itemList.indexOf(tdi);
                 tdi.isDeleted = true;
+                itemList.set(index, tdi);
+            }
+        }
+    }
+
+    private void markItemAsUndeleted(int itemId) {
+        for (ToDoItem tdi: itemList) {
+            if(tdi.id == itemId){
+                int index = itemList.indexOf(tdi);
+                tdi.isDeleted = false;
+                tdi.data = getCurrentFormattedDate();
                 itemList.set(index, tdi);
             }
         }
@@ -150,6 +235,12 @@ public class MainActivity extends FragmentActivity implements ItemListOnClickLis
         String pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
         return simpleDateFormat.format(new Date());
+    }
+
+    private Date getDateFromFormattedString(String dateString) throws ParseException {
+        String pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+        return simpleDateFormat.parse(dateString);
     }
 
 }

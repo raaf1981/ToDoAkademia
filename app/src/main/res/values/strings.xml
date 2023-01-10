@@ -7,4 +7,8 @@
     <string name="edit_text_new_item_hint">Add new item</string>
     <string name="button_add_text">Add</string>
     <string name="file_not_found_toast_message">File not found</string>
+    <string name="button_text_show_deleted_show">Pokaż usunięte</string>
+    <string name="button_text_show_deleted_hide">Ukryj usunięte</string>
+    <string name="button_azsort_text">A-Z</string>
+    <string name="button_datesort_text">Data</string>
 </resources>
