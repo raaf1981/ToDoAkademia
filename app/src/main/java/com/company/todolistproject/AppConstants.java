@@ -12,6 +12,10 @@ public class AppConstants {
     static final int AZSORT = 0;
     static final int DATESORT = 1;
 
+    static final int NO_FILTER_NOT_DELETED = 0;
+    static final int NO_FILTER_DELETED = 1;
+    static final int FILTER_NOT_DELETED = 2;
+    static final int FILTER_DELETED = 3;
 
     static final String WEB_URL_1 = "https://cdn.pixabay.com/photo/2022/11/22/13/21/otter-7609666_960_720.jpg";
     static final String WEB_URL_2 = "https://cdn.pixabay.com/photo/2022/11/20/11/39/forest-7604096_960_720.jpg";

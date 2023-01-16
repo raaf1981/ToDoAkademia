@@ -1,5 +1,10 @@
 package com.company.todolistproject;
 
+import static com.company.todolistproject.AppConstants.FILTER_DELETED;
+import static com.company.todolistproject.AppConstants.FILTER_NOT_DELETED;
+import static com.company.todolistproject.AppConstants.NO_FILTER_DELETED;
+import static com.company.todolistproject.AppConstants.NO_FILTER_NOT_DELETED;
+
 import android.content.Context;
 import android.graphics.Paint;
 import android.view.LayoutInflater;
@@ -44,45 +49,52 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ItemsV
     @Override
     public void onBindViewHolder(@NonNull ItemsViewHolder holder, int position) {
         if(isListFiltered ){
-            holder.itemId.setText(String.valueOf(itemlist.get(position).id));
             if (itemlist.get(position).isDeleted) {
-                holder.itemText.setPaintFlags((holder.itemText.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG));
-                holder.imageView.setImageResource(android.R.drawable.ic_menu_revert);
-                holder.itemView.setLayoutParams(new RecyclerView.LayoutParams(0, 0));
+                setItemView(holder, FILTER_DELETED, position);
             } else {
+                setItemView(holder, FILTER_NOT_DELETED, position);
+            }
+        }else {
+            if (itemlist.get(position).isDeleted) {
+                setItemView(holder, NO_FILTER_DELETED, position);
+            } else {
+                setItemView(holder, NO_FILTER_NOT_DELETED, position);
+            }
+        }
+
+    }
+
+    private void setItemView(ItemsViewHolder holder, int filter, int position) {
+        holder.itemView.setLayoutParams(new RecyclerView.LayoutParams(-1, -2));
+        holder.itemId.setText(String.valueOf(itemlist.get(position).id));
+        holder.itemText.setText(itemlist.get(position).text);
+        if (itemlist.size() > 1) {
+            holder.webView.loadUrl(webList.get(random.nextInt(3)));
+            holder.webView.setInitialScale(50);
+        }
+        switch (filter) {
+            case FILTER_NOT_DELETED:
+            case NO_FILTER_NOT_DELETED:
                 holder.itemText.setPaintFlags(0);
                 holder.imageView.setImageResource(android.R.drawable.ic_menu_delete);
-                holder.itemText.setText(itemlist.get(position).text);
-                if (itemlist.size() > 1) {
-                    holder.webView.loadUrl(webList.get(random.nextInt(3)));
-                    holder.webView.setInitialScale(50);
-                }
                 try {
                     holder.imageView.setOnClickListener(view1 -> ((MainActivity) context).onItemClick(itemlist.get(position).id, itemlist.get(position).isDeleted));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }
-        }else {
-            if (itemlist.get(position).isDeleted) {
+                break;
+            case NO_FILTER_DELETED:
                 holder.itemText.setPaintFlags((holder.itemText.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG));
                 holder.imageView.setImageResource(android.R.drawable.ic_menu_revert);
-            } else {
-                holder.itemText.setPaintFlags(0);
-                holder.imageView.setImageResource(android.R.drawable.ic_menu_delete);
-            }
-            holder.itemId.setText(String.valueOf(itemlist.get(position).id));
-            holder.itemText.setText(itemlist.get(position).text);
-
-            if (itemlist.size() > 1) {
-                holder.webView.loadUrl(webList.get(random.nextInt(3)));
-                holder.webView.setInitialScale(50);
-            }
-            try {
-                holder.imageView.setOnClickListener(view1 -> ((MainActivity) context).onItemClick(itemlist.get(position).id, itemlist.get(position).isDeleted));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+                try {
+                    holder.imageView.setOnClickListener(view1 -> ((MainActivity) context).onItemClick(itemlist.get(position).id, itemlist.get(position).isDeleted));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                break;
+            case FILTER_DELETED:
+                holder.itemView.setLayoutParams(new RecyclerView.LayoutParams(0, 0));
+                break;
         }
 
     }
